@@ -25,7 +25,11 @@ router.get("/", (req, res, next) => {
       });
     if (search)
       db.pokemons = db.pokemons.filter((e) => {
-        if (e.Name.toLowerCase() === search.toLocaleLowerCase()) return e;
+        if (
+          e.Name.toLowerCase() === search.toLocaleLowerCase() ||
+          e.id.toString() === search.toString()
+        )
+          return e;
       });
     let start = page === 1 ? page - 1 : page * limit - limit;
     let end = page * limit;
