@@ -48,13 +48,54 @@ router.get("/:id", (req, res, next) => {
     let db = fs.readFileSync("db.json", "utf-8");
     db = JSON.parse(db);
     pokemonId = parseInt(pokemonId.id);
-    let previous = pokemonId === 1 ? 721 : pokemonId - 1;
-    let next = pokemonId === 721 ? 1 : pokemonId + 1;
-    db = db.pokemons.filter(
-      (e) => e.id === pokemonId || e.id === next || e.id === previous
-    );
 
-    res.status(200).send(db);
+    const lastId = db.pokemons.length;
+    console.log(lastId);
+
+    let currenPoke = "";
+    let previousPoke = "";
+    let nextPoke = "";
+    let previous = pokemonId === 1 ? lastId : pokemonId - 1;
+    let next = pokemonId === lastId ? 1 : pokemonId + 1;
+    db = db.pokemons.map((e) => {
+      if (e.id.toString() === pokemonId.toString()) currenPoke = e;
+      if (e.id.toString() === previous.toString()) previousPoke = e;
+      if (e.id.toString() === next.toString()) nextPoke = e;
+    });
+    result.push(currenPoke, previousPoke, nextPoke);
+    res.status(200).send(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/", (req, res, next) => {
+  try {
+    const { name, id, url, types } = req.body;
+    let db = fs.readFileSync("db.json", "utf-8");
+    db = JSON.parse(db);
+
+    db.pokemons.map((e) => {
+      if (e.id.toString() === id.toString()) {
+        const exception = new Error(`The Pokémon already exists`);
+        exception.statusCode = 401;
+        throw exception;
+      }
+    });
+    if (!name || !id || !types) {
+      const exception = new Error(`Missing required data `);
+      exception.statusCode = 401;
+      throw exception;
+    }
+
+    const { pokemons } = db;
+    const newPokemon = { Name: name, id, url, types };
+    pokemons.push(newPokemon);
+    db.pokemons = pokemons;
+    db = JSON.stringify(db);
+
+    fs.writeFileSync("db.json", db);
+    res.status(200).send(newPokemon);
   } catch (error) {
     next(error);
   }
